@@ -1,0 +1,52 @@
+name: SpellCheck - All
+
+on:
+  push:
+    branches:
+      - main
+      - RPSaaSMaster
+      - RPSaaSCanary
+
+  pull_request:
+    branches:
+      - main
+      - RPSaaSMaster
+      - RPSaaSCanary
+    paths:
+      - "eng/common/spelling/**"
+      - "cspell.json"
+
+  schedule:
+    # Run every day at 12:06 UTC
+    - cron: "6 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  spellcheck:
+    name: SpellCheck
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Setup Node 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Run spelling check
+        run: |
+          $allFiles = Get-ChildItem -Path specification -Recurse -File
+          Write-Host "Found $($allFiles.Count) files to check"
+          ./eng/common/spelling/Invoke-Cspell.ps1 `
+            -FileList $allFiles.FullName `
+            -CSpellConfigPath './cspell.json' `
+            -SpellCheckRoot (Resolve-Path specification)
+        shell: pwsh

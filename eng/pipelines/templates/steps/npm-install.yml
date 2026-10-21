@@ -1,0 +1,25 @@
+parameters:
+  - name: NodeVersion
+    type: string
+    default: $(NodeVersion)
+  - name: WorkingDirectory
+    type: string
+    default: $(Build.SourcesDirectory)
+
+steps:
+  - template: /eng/pipelines/templates/steps/use-node-version.yml
+    parameters:
+      NodeVersion: ${{ parameters.NodeVersion }}
+
+  - script: npm run install-pnpm
+    displayName: Install pnpm
+    workingDirectory: ${{ parameters.WorkingDirectory }}
+
+  - script: pnpm ci
+    displayName: pnpm install
+    workingDirectory: ${{ parameters.WorkingDirectory }}
+
+  - script: pnpm ls || true
+    displayName: pnpm ls
+    condition: succeededOrFailed()
+    workingDirectory: ${{ parameters.WorkingDirectory }}

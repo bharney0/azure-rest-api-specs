@@ -1,0 +1,84 @@
+name: TypeSpec Validation - All
+
+on:
+  push:
+    branches:
+      - main
+      - RPSaaSMaster
+      - typespec-next
+
+  pull_request:
+    branches:
+      - main
+      - RPSaaSMaster
+      - typespec-next
+    paths:
+      - .gitattributes
+      - .oxfmtrc.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - package.json
+      - tsconfig.base.json
+      - eng/**
+      - "!eng/common/**"
+      - specification/suppressions.yaml
+      - specification/common-types/**
+
+      # Workflow and workflow dependencies
+      - .github/actions/setup-node-install-deps/**
+      - .github/shared/**
+      - .github/workflows/typespec-validation-all.yaml
+
+  schedule:
+    # Run 4x/day
+    - cron: "0 0,6,12,18 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  typespec-validation-all:
+    # Use short name to maximize space for parameters in UI
+    name: TSV
+
+    strategy:
+      # Validate all specs, even if one job fails early
+      fail-fast: false
+      # Sort matrix elements from "most important" to "least important" for the best grouping and UI
+      # Keep matrix values short, to maximize number of parameters shown in UI
+      matrix:
+        # When triggered by schedule, validate both the default branch and typespec-next
+        # Use the placeholder string "default" instead of passing "" directly, since the latter gets ignored by
+        # the GitHub Jobs UI.
+        ref: ${{ fromJSON(github.event_name == 'schedule' && '["default", "next"]' || '["default"]') }}
+        os: [ubuntu, windows]
+        # shards must start at 1 and increment by 1
+        shard: [1, 2, 3]
+        # total-shards must be an accurate count of the number of shards
+        total-shards: [3]
+
+    runs-on: ${{ fromJSON('{"ubuntu":"ubuntu-24.04", "windows":"windows-2022"}')[matrix.os] }}
+
+    steps:
+      - name: Enable git long paths
+        if: runner.os == 'Windows'
+        run: git config --global core.longpaths true
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # Convert placeholder string 'default' to '', which tells the action to checkout the default ref.
+          ref: ${{ matrix.ref == 'next' && 'typespec-next' || '' }}
+
+      - name: Setup Node and install deps
+        # Use the checked-out branch, which can be typespec-next rather than the workflow's commit.
+        uses: ./.github/actions/setup-node-install-deps
+
+      - name: Validate All Specs
+        run: >-
+          node eng/tools/typespec-validation/cmd/tsv.js --all
+          --shard=${{ matrix.shard }}/${{ matrix.total-shards }} --git-clean specification
+          --github-summary
+          ${{ runner.debug == '1' && '--verbose' || '' }}

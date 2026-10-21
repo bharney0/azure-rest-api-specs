@@ -1,0 +1,68 @@
+version: "0.2"
+language: en
+flagWords:
+  - teh
+ignorePaths:
+  - .gitignore
+  - .npmrc
+  - .vscode/**
+  - "**/examples/**"
+  - "**/package-lock.json"
+  - pnpm-lock.yaml
+  - pnpm-workspace.yaml
+  - cspell.json
+  - cspell.yaml
+  - eng/**
+  - .github/skills/**
+  - node_modules/**
+  - specification/suppressions.yaml
+  - .devcontainer/**
+ignoreRegExpList:
+  - Base64
+  - email
+  - v\d
+minWordLength: 4
+dictionaries:
+  - companies
+  - csharp
+  - go
+  - html
+  - java
+  - node
+  - python
+  - softwareTerms
+  - typescript
+enableFiletypes:
+  - cadl
+allowCompoundWords: true
+words:
+  - agentic
+  - azext
+  - azsdk
+  - byos
+  - cadl
+  - contoso
+  - docsmsft
+  - eastus
+  - entra
+  - esbenp
+  - evals
+  - fqdns
+  - hana
+  - kusto
+  - liftr
+  - localizable
+  - mbps
+  - mgmt
+  - odata
+  - onboarded
+  - payg
+  - regen
+  - rpaas
+  - skus
+  - tsgolint
+  - vmss
+  - vnet
+  - waza
+  - westus
+caseSensitive: false
